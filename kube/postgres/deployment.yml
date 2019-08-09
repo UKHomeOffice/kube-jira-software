@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-jira
+  labels:
+    app: postgres-jira
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-jira
+  template:
+    metadata:
+      labels:
+        app: postgres-jira
+      annotations:
+        repository: https://github.com/docker-library/postgres
+        owner: devops@digital.homeoffice.gov.uk
+    spec:
+      volumes:
+      - name: postgres-data
+        emptyDir: {}
+      securityContext:
+        fsGroup: 70
+      containers:
+      - name: postgres
+        image: {{ .POSTGRES_DOCKER_IMAGE }}:{{ .POSTGRES_VERSION }}
+        {{- if eq .POSTGRES_VERSION "latest" }}
+        imagePullPolicy: Always
+        {{- end }}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 70
+          runAsGroup: 70
+        resources:
+          limits:
+            cpu: {{ .POSTGRES_CPU_LIMIT }}
+            memory: {{ .POSTGRES_MEMORY_LIMIT }}
+          requests:
+            cpu: {{ .POSTGRES_CPU_REQUEST }}
+            memory: {{ .POSTGRES_MEMORY_REQUEST }}
+        env:
+        - name: POSTGRES_DB
+          valueFrom:
+            secretKeyRef:
+              name: {{ .JIRA_DB_SECRET }}
+              key: default_db
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .JIRA_DB_SECRET }}
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .JIRA_DB_SECRET }}
+              key: password
+        - name: PGDATA
+          value: /opt/postgresql/data/pgdata
+        ports:
+        - name: postgres
+          containerPort: 5432
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /opt/postgresql/data

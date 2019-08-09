@@ -1,0 +1,4 @@
+fileignoreconfig:
+- filename: scripts/env.sh
+  checksum: 4ef0192b0e2b41f659d89decd64add43253369a789d1aa003a1420b08002cd91
+  ignore_detectors: []

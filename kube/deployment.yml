@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jira
+  labels:
+    app: jira
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jira
+  template:
+    metadata:
+      labels:
+        app: jira
+      annotations:
+        repository: https://bitbucket.org/atlassian-docker/docker-atlassian-jira
+        owner: devops@digital.homeoffice.gov.uk
+    spec:
+      volumes:
+      - name: jira-data
+        {{- if .JIRA_DATA_VOLUME_SIZE }}
+        persistentVolumeClaim:
+          claimName: jira-data
+        {{- else }}
+        emptyDir: {}
+        {{- end }}
+      {{- if .NODE_SELECTOR }}
+      nodeSelector:
+        failure-domain.beta.kubernetes.io/zone: {{ .NODE_SELECTOR }}
+      {{- end }}
+      securityContext:
+        fsGroup: 2001
+      containers:
+      - name: jira
+        image: {{ .JIRA_DOCKER_IMAGE }}:{{ .JIRA_VERSION }}
+        {{- if eq .USE_DOCKER_CACHE_ONLY "true" }}
+        imagePullPolicy: Never
+        {{-  else if eq .JIRA_VERSION "latest" }}
+        imagePullPolicy: Always
+        {{- end }}
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 2001
+          runAsGroup: 2001
+        resources:
+          limits:
+            cpu: {{ .JIRA_CPU_LIMIT }}
+            # JIRA_MEMORY_LIMIT is a shared variable between k8s resources limits and the JVM
+            # so we need to append "Mi" here to specify the unit
+            memory: {{ .JIRA_MEMORY_LIMIT }}Mi
+          requests:
+            cpu: {{ .JIRA_CPU_REQUEST }}
+            memory: {{ .JIRA_MEMORY_REQUEST }}Mi
+        env:
+        - name: JVM_MAXIMUM_MEMORY
+          # JIRA_MEMORY_LIMIT is a shared variable between k8s resources limits and the JVM
+          # so we need to append "m" here to specify the unit
+          value: {{ .JIRA_MEMORY_LIMIT }}m
+        - name: JIRA_JDBC_URL_DRIVER
+          value: {{ .JIRA_JDBC_URL_DRIVER }}
+        - name: JIRA_DB_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: {{ .JIRA_DB_SECRET }}
+              key: endpoint
+        - name: JIRA_DB_PORT
+          valueFrom:
+            secretKeyRef:
+              name: {{ .JIRA_DB_SECRET }}
+              key: port
+        - name: JIRA_DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ .JIRA_DB_SECRET }}
+              key: default_db
+        - name: ATL_JDBC_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ .JIRA_DB_SECRET }}
+              key: username
+        - name: ATL_JDBC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ .JIRA_DB_SECRET }}
+              key: password
+        - name: ATL_DB_DRIVER
+          value: {{ .JIRA_ATL_DB_DRIVER }}
+        - name: ATL_DB_TYPE
+          value: {{ .JIRA_ATL_DB_TYPE }}
+        - name: ATL_PROXY_NAME
+          value: {{ .JIRA_DNS_NAME }}
+        - name: ATL_PROXY_PORT
+          value: "443"
+        ports:
+        - name: http
+          containerPort: 8080
+        volumeMounts:
+        - name: jira-data
+          mountPath: /var/atlassian/application-data/jira
+
+      - name: proxy
+        image: quay.io/ukhomeofficedigital/nginx-proxy
+        securityContext:
+          runAsNonRoot: true
+        env:
+          - name: PROXY_SERVICE_HOST
+            value: 'http://127.0.0.1'
+          - name: PROXY_SERVICE_PORT
+            value: '8080'
+          - name: LOG_FORMAT_NAME
+            value: 'json'
+          - name: NAXSI_USE_DEFAULT_RULES
+            value: 'FALSE'
+          - name: CLIENT_MAX_BODY_SIZE
+            value: '10'
+        ports:
+          - name: https
+            containerPort: 10443

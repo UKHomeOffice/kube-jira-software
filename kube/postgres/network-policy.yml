@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-ingress-to-postgres-from-jira
+spec:
+  podSelector:
+    matchLabels:
+      app: postgres-jira
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          app: jira
+    ports:
+    - protocol: TCP
+      port: 5432

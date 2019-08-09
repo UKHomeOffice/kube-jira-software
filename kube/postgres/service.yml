@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-jira
+  labels:
+    app: postgres-jira
+spec:
+  type: ClusterIP
+  ports:
+  - name: https
+    port: 5432
+    targetPort: 5432
+  selector:
+    app: postgres-jira

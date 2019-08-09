@@ -1,0 +1,46 @@
+---
+# This default policy permits access for LetsEncrypt to resolve the http01 challenges from the ACME pods
+kind: NetworkPolicy
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: permit-certmanager-acme
+spec:
+  policyTypes:
+  - Ingress
+  podSelector:
+    matchExpressions:
+    - {key: certmanager.k8s.io/acme-http-domain, operator: Exists}
+    - {key: certmanager.k8s.io/acme-http-token, operator: Exists}
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-external
+    - podSelector:
+        matchLabels:
+          name: ingress
+    ports:
+    - protocol: TCP
+      port: 8089
+  
+
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-external-ingress-to-jira
+spec:
+  podSelector:
+    matchLabels:
+      app: jira
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-external
+      # podSelector:
+      #   matchLabels:
+      #     name: ingress # ingress? no pods named ingress in the current namespace? for internal ingress if we had one?
+    ports:
+    - protocol: TCP
+      port: 10443
