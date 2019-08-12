@@ -9,6 +9,8 @@ export JIRA_DATA_VOLUME_SIZE="10Gi"
 export JIRA_CPU_LIMIT="1000m"
 export JIRA_CPU_REQUEST="200m"
 export JIRA_DOCKER_IMAGE="quay.io/ukhomeofficedigital/jira-software"
+export JIRA_DOCKER_GIT_REPO="https://github.com/UKHomeOffice/docker-jira-software/"
+export JIRA_DOCKER_GIT_REPO_OWNER="devops@digital.homeoffice.gov.uk"
 export JIRA_VERSION="8.1.2"
 # Memory request and limit should be in megabytes wit no unit suffix (used as a kube param and a JVM param)
 export JIRA_MEMORY_LIMIT="3072"

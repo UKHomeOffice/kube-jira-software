@@ -8,7 +8,7 @@ echo "--- namespace: ${KUBE_NAMESPACE}"
 kd_options="--insecure-skip-tls-verify --namespace=${KUBE_NAMESPACE} --check-interval=15s --debug-templates"
 
 if [[ -n "${CONTAINERISED_DATABASE}" ]]; then
-  echo "[info] running Postgres in a pod"
+  echo "[info] running Postgres on Kubernetes"
   if ! kd ${kd_options} \
     -f kube/postgres/deployment.yml \
     -f kube/postgres/service.yml \

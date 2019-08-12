@@ -14,8 +14,8 @@ spec:
       labels:
         app: jira
       annotations:
-        repository: https://bitbucket.org/atlassian-docker/docker-atlassian-jira
-        owner: devops@digital.homeoffice.gov.uk
+        repository: {{ .JIRA_DOCKER_GIT_REPO }}
+        owner: {{ .JIRA_DOCKER_GIT_REPO_OWNER }}
     spec:
       volumes:
       - name: jira-data
