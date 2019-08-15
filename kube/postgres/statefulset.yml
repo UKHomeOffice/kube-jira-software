@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: postgres-jira
   labels:
@@ -9,6 +9,7 @@ spec:
   selector:
     matchLabels:
       app: postgres-jira
+  serviceName: postgres-jira
   template:
     metadata:
       labels:
@@ -17,9 +18,12 @@ spec:
         repository: https://github.com/docker-library/postgres
         owner: devops@digital.homeoffice.gov.uk
     spec:
+      terminationGracePeriodSeconds: 30
       volumes:
-      - name: postgres-data
+      - name: postgres-jira-data
+        {{- if not .POSTGRES_JIRA_DATA_VOLUME_SIZE }}
         emptyDir: {}
+        {{- end }}
       securityContext:
         fsGroup: 70
       containers:
@@ -61,5 +65,18 @@ spec:
         - name: postgres
           containerPort: 5432
         volumeMounts:
-        - name: postgres-data
+        - name: postgres-jira-data
           mountPath: /opt/postgresql/data
+  {{- if .POSTGRES_JIRA_DATA_VOLUME_SIZE }}
+  volumeClaimTemplates:
+  - metadata:
+      name: postgres-jira-data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: {{ .STORAGE_CLASS }}
+      resources:
+        requests:
+          storage: {{ .POSTGRES_JIRA_DATA_VOLUME_SIZE }}
+  {{- end }}
+

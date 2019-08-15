@@ -10,7 +10,7 @@ kd_options="--insecure-skip-tls-verify --namespace=${KUBE_NAMESPACE} --check-int
 if [[ -n "${CONTAINERISED_DATABASE}" ]]; then
   echo "[info] running Postgres on Kubernetes"
   if ! kd ${kd_options} \
-    -f kube/postgres/deployment.yml \
+    -f kube/postgres/statefulset.yml \
     -f kube/postgres/service.yml \
     -f kube/postgres/network-policy.yml \
   ; then
@@ -19,16 +19,8 @@ if [[ -n "${CONTAINERISED_DATABASE}" ]]; then
   fi
 fi
 
-if [[ -n "${JIRA_DATA_VOLUME_SIZE}" ]]; then
-  echo "[info] managing persistent volume claim for jira storage of ${JIRA_DATA_VOLUME_SIZE}"
-  if ! kd ${kd_options} -f kube/pvc.yml; then
-    echo "[failed] unable create provision volume"
-    exit 1
-  fi
-fi
-
 kd ${kd_options} \
-  -f kube/deployment.yml \
+  -f kube/statefulset.yml \
   -f kube/ingress.yml \
   -f kube/network-policy.yml \
   -f kube/service.yml \

@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: jira
   labels:
@@ -9,6 +9,7 @@ spec:
   selector:
     matchLabels:
       app: jira
+  serviceName: jira
   template:
     metadata:
       labels:
@@ -17,12 +18,10 @@ spec:
         repository: {{ .JIRA_DOCKER_GIT_REPO }}
         owner: {{ .JIRA_DOCKER_GIT_REPO_OWNER }}
     spec:
+      terminationGracePeriodSeconds: 30
       volumes:
       - name: jira-data
-        {{- if .JIRA_DATA_VOLUME_SIZE }}
-        persistentVolumeClaim:
-          claimName: jira-data
-        {{- else }}
+        {{- if not .JIRA_DATA_VOLUME_SIZE }}
         emptyDir: {}
         {{- end }}
       {{- if .NODE_SELECTOR }}
@@ -117,3 +116,15 @@ spec:
         ports:
           - name: https
             containerPort: 10443
+  {{- if .JIRA_DATA_VOLUME_SIZE }}
+  volumeClaimTemplates:
+  - metadata:
+      name: jira-data
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: {{ .STORAGE_CLASS }}
+      resources:
+        requests:
+          storage: {{ .JIRA_DATA_VOLUME_SIZE }}
+  {{- end }}

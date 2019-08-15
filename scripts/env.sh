@@ -6,6 +6,7 @@
 # USE_DOCKER_CACHE_ONLY set to "true" is useful when debugging cached Docker images
 export USE_DOCKER_CACHE_ONLY="false"
 export JIRA_DATA_VOLUME_SIZE="10Gi"
+export POSTGRES_JIRA_DATA_VOLUME_SIZE="10Gi"
 export JIRA_CPU_LIMIT="1000m"
 export JIRA_CPU_REQUEST="200m"
 export JIRA_DOCKER_IMAGE="quay.io/ukhomeofficedigital/jira-software"
