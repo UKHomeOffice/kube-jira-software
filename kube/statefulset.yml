@@ -116,6 +116,20 @@ spec:
         ports:
           - name: https
             containerPort: 10443
+        livenessProbe:
+          httpGet:
+            scheme: HTTPS
+            path: /ping
+            port: 10443
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            scheme: HTTPS
+            path: /ping
+            port: 10443
+          initialDelaySeconds: 10
+          periodSeconds: 10
   {{- if .JIRA_DATA_VOLUME_SIZE }}
   volumeClaimTemplates:
   - metadata:
