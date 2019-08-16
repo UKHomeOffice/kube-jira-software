@@ -91,6 +91,8 @@ spec:
           value: {{ .JIRA_DNS_NAME }}
         - name: ATL_PROXY_PORT
           value: "443"
+        - name: ATL_TOMCAT_SCHEME
+          value: https
         ports:
         - name: http
           containerPort: 8080
